@@ -21,7 +21,7 @@ class CloudSQLTool(BaseVoiceTool):
     def __init__(self, project_id: Optional[str] = None):
         self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
 
-    async def execute(self, sql_query: str, instance_connection_name: str = "gen-demo-66-20250711:us-central1:default-sql", database_name: str = "app_db") -> Dict[str, Any]:
+    async def execute(self, sql_query: str, instance_connection_name: str = "YOUR_GCP_PROJECT_ID:us-central1:default-sql", database_name: str = "app_db") -> Dict[str, Any]:
         logger.info(f"Executing Cloud SQL Query on [{instance_connection_name}/{database_name}]: {sql_query}")
         
         # Guardrail: Prevent mutations
