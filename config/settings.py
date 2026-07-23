@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
 
 class VoiceAgentSettings(BaseModel):
@@ -54,9 +54,20 @@ class VoiceAgentSettings(BaseModel):
     fastapi_host: str = Field(default_factory=lambda: os.getenv("FASTAPI_HOST", "0.0.0.0"))
     fastapi_port: int = Field(default_factory=lambda: int(os.getenv("FASTAPI_PORT", "8000")))
     
-    # Observability & Evaluation
-    enable_cloud_tracing: bool = True
-    enable_dlp_pii_redaction: bool = False
-    target_latency_sla_ms: float = 800.0
+    # CORS Allowed Origins
+    allowed_origins: List[str] = Field(
+        default_factory=lambda: os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    )
+    
+    # Observability & Evaluation — now reads from env variables
+    enable_cloud_tracing: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_CLOUD_TRACING", "true").lower() == "true"
+    )
+    enable_dlp_pii_redaction: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_DLP_PII_REDACTION", "false").lower() == "true"
+    )
+    target_latency_sla_ms: float = Field(
+        default_factory=lambda: float(os.getenv("TARGET_LATENCY_SLA_MS", "800.0"))
+    )
 
 settings = VoiceAgentSettings()

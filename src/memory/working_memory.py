@@ -25,6 +25,13 @@ class ShortTermWorkingMemory:
         """Return active working context turns."""
         return list(self._turns)
 
+    def remove_oldest(self, count: int) -> List[Dict[str, Any]]:
+        """Remove and return the oldest N turns from working memory."""
+        actual_count = min(count, len(self._turns))
+        removed = self._turns[:actual_count]
+        del self._turns[:actual_count]
+        return removed
+
     def clear(self) -> None:
         """Clear memory buffer."""
         self._turns.clear()

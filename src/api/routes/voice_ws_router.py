@@ -35,13 +35,25 @@ async def websocket_voice_endpoint(websocket: WebSocket, session_id: str = "defa
 
             elif "text" in message and message["text"]:
                 text_payload = message["text"]
-                data = json.loads(text_payload)
+                try:
+                    data = json.loads(text_payload)
+                except json.JSONDecodeError:
+                    await websocket.send_json({"event": "error", "message": "Invalid JSON payload"})
+                    continue
                 
                 if data.get("action") == "interrupt":
                     res = manager.handle_barge_in()
                     await websocket.send_json({"event": "interrupted", "turn_id": res["new_turn_id"]})
                 elif data.get("action") == "image_frame" or "image_base64" in data:
-                    img_data = base64.b64decode(data.get("image_base64", ""))
+                    raw_b64 = data.get("image_base64", "")
+                    if not raw_b64:
+                        await websocket.send_json({"event": "error", "message": "Missing image_base64 data"})
+                        continue
+                    try:
+                        img_data = base64.b64decode(raw_b64)
+                    except Exception:
+                        await websocket.send_json({"event": "error", "message": "Invalid base64 encoding"})
+                        continue
                     mime = data.get("mime_type", "image/jpeg")
                     await client.send_realtime_media_frame(img_data, mime_type=mime)
                     await websocket.send_json({"event": "media_frame_received", "mime": mime, "status": "ok"})

@@ -51,8 +51,11 @@ class UnifiedStateAndMemoryOrchestrator:
         
         # Automatic Context Compaction / Summarization Check
         turns = self.working_memory.get_context_turns()
-        if len(turns) >= 6:
-            self._compact_context(turns[:3])
+        if len(turns) >= self.working_memory.max_turns:
+            # Compact the oldest 3 turns into a summary, then remove them
+            old_turns = turns[:3]
+            self._compact_context(old_turns)
+            self.working_memory.remove_oldest(3)
 
     def _compact_context(self, old_turns: List[Dict[str, Any]]) -> None:
         """Compacts early dialogue turns into a persistent summary string."""

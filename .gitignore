@@ -12,7 +12,8 @@ ENV/
 # Environment & Credentials
 .env
 .env.local
-*.json
+*-credentials.json
+service-account*.json
 !requirements.txt
 
 # IDE

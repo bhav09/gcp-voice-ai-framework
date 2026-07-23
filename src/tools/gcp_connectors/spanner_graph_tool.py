@@ -1,9 +1,11 @@
 import os
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from google.cloud import spanner
 from ..base_tool import BaseVoiceTool
+from ..sql_utils import is_mutating_query
 
 logger = logging.getLogger("SpannerGraphTool")
 
@@ -28,22 +30,26 @@ class SpannerGraphTool(BaseVoiceTool):
             self._client = spanner.Client(project=self.project_id)
         return self._client
 
+    def _run_snapshot_query(self, database, gql_query: str):
+        """Execute GQL in a snapshot — blocking helper for asyncio.to_thread()."""
+        with database.snapshot() as snapshot:
+            results = snapshot.execute_sql(gql_query)
+            return [list(row) for row in results]
+
     async def execute(self, gql_query: str, instance_id: str = "default-instance", database_id: str = "default-db") -> Dict[str, Any]:
         logger.info(f"Executing Spanner GQL Graph Query on [{instance_id}/{database_id}]: {gql_query}")
         
         # Guardrail check against mutating operations
-        query_upper = gql_query.upper().strip()
-        if any(kw in query_upper for kw in ["DROP ", "DELETE ", "UPDATE ", "INSERT "]):
+        if is_mutating_query(gql_query):
             return {"error": "Mutating GQL graph queries are restricted for voice agent safety."}
 
         try:
             client = self._get_client()
             instance = client.instance(instance_id)
             database = instance.database(database_id)
-            with database.snapshot() as snapshot:
-                results = snapshot.execute_sql(gql_query)
-                rows = [list(row) for row in results]
-                return {"node_edge_count": len(rows), "graph_paths": rows}
+            # Run blocking Spanner call in thread pool
+            rows = await asyncio.to_thread(self._run_snapshot_query, database, gql_query)
+            return {"node_edge_count": len(rows), "graph_paths": rows}
         except Exception as e:
             logger.warning(f"Spanner Graph execution notice: {str(e)}")
             return {

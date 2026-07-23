@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -35,14 +36,16 @@ class FirestoreTool(BaseVoiceTool):
             db = self._get_db()
             doc_ref = db.collection(collection).document(document_id)
             if action == "read":
-                doc = doc_ref.get()
+                # Run blocking Firestore call in thread pool
+                doc = await asyncio.to_thread(doc_ref.get)
                 if doc.exists:
                     return {"exists": True, "data": doc.to_dict()}
                 return {"exists": False, "data": {}}
             elif action == "write":
                 if not payload:
                     return {"error": "Payload is required for write action."}
-                doc_ref.set(payload, merge=True)
+                # Run blocking Firestore call in thread pool
+                await asyncio.to_thread(doc_ref.set, payload, merge=True)
                 return {"status": "success", "updated_doc_id": document_id}
             else:
                 return {"error": f"Invalid action: {action}"}

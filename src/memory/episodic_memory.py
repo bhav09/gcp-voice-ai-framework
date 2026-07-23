@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Any, Optional
 from ..tools.gcp_connectors.firestore_tool import FirestoreTool

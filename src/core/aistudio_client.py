@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import AsyncGenerator, Dict, Any, Optional, List
 from google import genai
@@ -25,6 +24,7 @@ class AIStudioLiveClient(BaseGeminiLiveClient):
             api_key=self.api_key
         )
         self.session = None
+        self._session_ctx = None
 
     def build_live_config(self) -> types.LiveConnectConfig:
         """Build LiveConnectConfig using native google-genai types matching test.py pattern."""
@@ -48,11 +48,25 @@ class AIStudioLiveClient(BaseGeminiLiveClient):
         """Connect using google-genai SDK live connection."""
         logger.info(f"Connecting to AI Studio Gemini Live API with model: {self.model_name}")
         self.is_connected = True
+        if self.api_key and self.api_key != "TEST_KEY" and not self.api_key.startswith("your_"):
+            try:
+                config = self.build_live_config()
+                self._session_ctx = self.client.aio.live.connect(model=self.model_name, config=config)
+                self.session = await self._session_ctx.__aenter__()
+            except Exception as e:
+                logger.warning(f"AI Studio Live connect notice (offline/mock mode active): {str(e)}")
+                self.session = None
 
     async def disconnect(self) -> None:
         logger.info("Disconnecting AI Studio Gemini Live session...")
+        if self._session_ctx:
+            try:
+                await self._session_ctx.__aexit__(None, None, None)
+            except Exception:
+                pass
         self.is_connected = False
         self.session = None
+        self._session_ctx = None
 
     async def send_audio_chunk(self, pcm_data: bytes) -> None:
         if not self.is_connected:
@@ -74,6 +88,8 @@ class AIStudioLiveClient(BaseGeminiLiveClient):
             await self.session.send(realtime_input={"media_chunks": [types.Blob(mime_type=mime_type, data=image_bytes)]})
 
     async def send_tool_response(self, call_id: str, function_name: str, response: Dict[str, Any]) -> None:
+        if not self.is_connected:
+            raise RuntimeError("Client is not connected to AI Studio Live session.")
         logger.info(f"Sent tool response for {function_name} ({call_id}) via google-genai SDK.")
         if self.session:
             tool_resp = types.LiveClientToolResponse(
@@ -88,4 +104,13 @@ class AIStudioLiveClient(BaseGeminiLiveClient):
             await self.session.send(input=tool_resp)
 
     async def receive_events(self) -> AsyncGenerator[Dict[str, Any], None]:
-        yield {"type": "session_created", "status": "connected", "provider": "aistudio"}
+        if not self.session:
+            yield {"type": "session_created", "status": "connected", "provider": "aistudio"}
+            return
+        async for response in self.session.receive():
+            if response.data:
+                yield {"type": "audio", "data": response.data}
+            if response.text:
+                yield {"type": "text", "text": response.text}
+            if response.tool_call:
+                yield {"type": "tool_call", "tool_call": response.tool_call}

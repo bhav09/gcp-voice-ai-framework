@@ -1,9 +1,11 @@
 import os
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from google.cloud import bigquery
 from ..base_tool import BaseVoiceTool
+from ..sql_utils import is_mutating_query
 
 logger = logging.getLogger("BigQueryTool")
 
@@ -28,15 +30,15 @@ class BigQueryTool(BaseVoiceTool):
 
     async def execute(self, query: str) -> Dict[str, Any]:
         logger.info(f"Executing BigQuery query on project {self.project_id}: {query}")
-        # Guardrail: Prevent DDL/DML mutation queries (INSERT, DROP, DELETE, UPDATE)
-        query_upper = query.upper().strip()
-        if any(keyword in query_upper for keyword in ["DROP ", "DELETE ", "UPDATE ", "ALTER ", "TRUNCATE "]):
+        # Guardrail: Prevent DDL/DML mutation queries
+        if is_mutating_query(query):
             return {"error": "Mutating SQL queries are restricted for safety compliance."}
         
         try:
             client = self._get_client()
-            query_job = client.query(query)
-            results = [dict(row) for row in query_job.result(max_results=20)]
+            # Run blocking BigQuery calls in thread pool to avoid blocking the event loop
+            query_job = await asyncio.to_thread(client.query, query)
+            results = await asyncio.to_thread(lambda: [dict(row) for row in query_job.result(max_results=20)])
             return {"row_count": len(results), "rows": results}
         except Exception as e:
             logger.warning(f"BigQuery execution notice: {str(e)}")

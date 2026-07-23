@@ -1,5 +1,7 @@
+import re
 import logging
 from typing import Dict, Any, List, Optional
+from ..tools.sql_utils import is_mutating_query
 
 logger = logging.getLogger("VoiceGuardrails")
 
@@ -13,18 +15,23 @@ class VoiceGuardrailsEngine:
         self.nsfw_terms = [
             "nsfw", "explicit", "porn", "nude", "sex", "vulgar", "fuck", "shit", "bitch", "asshole", "bastard"
         ]
-        self.off_topic_indicators = [
-            "tell me a joke about dating", "weather in tokyo for my vacation", "who won the football match yesterday",
-            "cook a recipe for dinner", "movie recommendations"
+        
+        # Category-based off-topic detection with keyword groups
+        self.off_topic_categories = [
+            {"keywords": ["joke", "dating", "funny story", "humor"], "category": "entertainment"},
+            {"keywords": ["weather", "vacation", "holiday", "travel", "tourism"], "category": "travel"},
+            {"keywords": ["football", "soccer", "cricket", "match score", "sports", "basketball", "tennis"], "category": "sports"},
+            {"keywords": ["recipe", "cook", "dinner", "food", "restaurant", "cuisine"], "category": "food"},
+            {"keywords": ["movie", "film", "netflix", "show recommendation", "tv series", "anime"], "category": "entertainment_media"},
         ]
 
     def validate_input_transcript(self, text: str) -> Dict[str, Any]:
         """Validate input user transcript for prompt injection, NSFW content, or off-topic conversation."""
         text_lower = text.lower()
 
-        # 1. NSFW Check
+        # 1. NSFW Check — use word-boundary regex to avoid false negatives from spacing tricks
         for nsfw in self.nsfw_terms:
-            if nsfw in text_lower:
+            if re.search(r'\b' + re.escape(nsfw) + r'\b', text_lower):
                 logger.warning(f"NSFW Guardrail triggered on term: [{nsfw}]")
                 return {
                     "is_safe": False,
@@ -32,10 +39,11 @@ class VoiceGuardrailsEngine:
                     "polite_response": "I am designed strictly for professional GCP Voice AI enterprise data analytics and dashboard generation. Please keep our discussion professional and focused on your GCP use case."
                 }
 
-        # 2. Off-Topic Check
-        for off_topic in self.off_topic_indicators:
-            if off_topic in text_lower:
-                logger.info(f"Off-Topic Guardrail triggered on phrase: [{off_topic}]")
+        # 2. Off-Topic Check — keyword-category matching instead of hardcoded exact phrases
+        for category_group in self.off_topic_categories:
+            matched_keywords = [kw for kw in category_group["keywords"] if kw in text_lower]
+            if len(matched_keywords) >= 1:
+                logger.info(f"Off-Topic Guardrail triggered on category [{category_group['category']}], matched: {matched_keywords}")
                 return {
                     "is_safe": False,
                     "violation_type": "OFF_TOPIC",
@@ -56,4 +64,18 @@ class VoiceGuardrailsEngine:
 
     def validate_tool_args(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Verify tool execution parameters against security policy."""
+        # Check SQL/GQL query args for mutations
+        sql_arg_names = ["query", "sql_query", "gql_query"]
+        for arg_name in sql_arg_names:
+            if arg_name in args and isinstance(args[arg_name], str):
+                if is_mutating_query(args[arg_name]):
+                    return {"allowed": False, "reason": f"Mutating query detected in argument '{arg_name}'"}
+        
+        # Check for path traversal in collection/document names
+        path_args = ["collection", "document_id"]
+        for arg_name in path_args:
+            if arg_name in args and isinstance(args[arg_name], str):
+                if ".." in args[arg_name] or args[arg_name].startswith("/"):
+                    return {"allowed": False, "reason": f"Path traversal detected in argument '{arg_name}'"}
+        
         return {"allowed": True}

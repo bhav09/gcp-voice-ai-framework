@@ -34,6 +34,7 @@ class CircuitBreaker:
         self.failure_count: int = 0
         self.success_count: int = 0
         self.last_failure_time: float = 0.0
+        self._half_open_in_flight: int = 0
         self._lock = asyncio.Lock()
 
     async def call(self, func: Callable[..., Any], *args: Any, fallback: Optional[Callable[..., Any]] = None, **kwargs: Any) -> Any:
@@ -46,12 +47,23 @@ class CircuitBreaker:
                     logger.info(f"Circuit Breaker [{self.name}] transitioning from OPEN -> HALF_OPEN for trial execution.")
                     self.state = CircuitState.HALF_OPEN
                     self.success_count = 0
+                    self._half_open_in_flight = 0
                 else:
                     logger.warning(f"Circuit Breaker [{self.name}] is OPEN. Blocking execution.")
                     if fallback:
                         return await fallback(*args, **kwargs)
                     raise CircuitBreakerOpenException(f"Service [{self.name}] circuit breaker is OPEN")
 
+            # In HALF_OPEN, limit concurrent trial calls
+            if self.state == CircuitState.HALF_OPEN:
+                if self._half_open_in_flight >= self.half_open_max_trials:
+                    logger.warning(f"Circuit Breaker [{self.name}] HALF_OPEN trial limit reached. Blocking additional calls.")
+                    if fallback:
+                        return await fallback(*args, **kwargs)
+                    raise CircuitBreakerOpenException(f"Service [{self.name}] circuit breaker HALF_OPEN trial limit reached")
+                self._half_open_in_flight += 1
+
+        # Execute outside lock to allow concurrency
         try:
             result = await func(*args, **kwargs)
             await self._on_success()
@@ -65,11 +77,13 @@ class CircuitBreaker:
     async def _on_success(self):
         async with self._lock:
             if self.state == CircuitState.HALF_OPEN:
+                self._half_open_in_flight = max(0, self._half_open_in_flight - 1)
                 self.success_count += 1
                 if self.success_count >= self.half_open_max_trials:
                     logger.info(f"Circuit Breaker [{self.name}] recovered! HALF_OPEN -> CLOSED")
                     self.state = CircuitState.CLOSED
                     self.failure_count = 0
+                    self._half_open_in_flight = 0
             elif self.state == CircuitState.CLOSED:
                 self.failure_count = 0
 
@@ -79,6 +93,12 @@ class CircuitBreaker:
             self.last_failure_time = time.time()
             logger.error(f"Circuit Breaker [{self.name}] recorded failure #{self.failure_count}: {exc}")
             
-            if self.failure_count >= self.failure_threshold:
+            if self.state == CircuitState.HALF_OPEN:
+                # Any failure in HALF_OPEN immediately trips back to OPEN
+                self._half_open_in_flight = max(0, self._half_open_in_flight - 1)
+                logger.error(f"Circuit Breaker [{self.name}] HALF_OPEN trial failed. HALF_OPEN -> OPEN")
+                self.state = CircuitState.OPEN
+                self.failure_count = 0  # Reset for next recovery cycle
+            elif self.failure_count >= self.failure_threshold:
                 logger.error(f"Circuit Breaker [{self.name}] threshold reached. CLOSED -> OPEN")
                 self.state = CircuitState.OPEN

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Type
-import base64
 from pydantic import BaseModel
 
 class BaseVoiceTool(ABC):

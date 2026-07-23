@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -34,8 +35,9 @@ class PubSubTool(BaseVoiceTool):
             publisher = self._get_publisher()
             topic_path = publisher.topic_path(self.project_id, topic_id)
             data_bytes = json.dumps(event_data).encode("utf-8")
-            future = publisher.publish(topic_path, data=data_bytes)
-            message_id = future.result()
+            # Run blocking publish + future.result() in thread pool
+            future = await asyncio.to_thread(publisher.publish, topic_path, data=data_bytes)
+            message_id = await asyncio.to_thread(future.result)
             return {"status": "published", "message_id": message_id, "topic": topic_id}
         except Exception as e:
             logger.warning(f"PubSub publish notice: {str(e)}")

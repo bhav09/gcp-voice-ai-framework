@@ -31,7 +31,7 @@ class ToolEvaluator:
         expected_schema_keys: List[str]
     ) -> ToolExecutionEvaluation:
         """Evaluates a single tool execution turn for validity, speed, and provenance citations."""
-        is_valid = all(k in result_payload for k in expected_schema_keys) or "error" not in result_payload
+        is_valid = all(k in result_payload for k in expected_schema_keys) and "error" not in result_payload
         status = "SUCCESS" if ("status" in result_payload and result_payload["status"] == "SUCCESS") or "error" not in result_payload else "FAILED"
         
         # Extract RAG Citations if present

@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from ..base_tool import BaseVoiceTool
+from ..sql_utils import is_mutating_query
 
 logger = logging.getLogger("CloudSQLTool")
 
@@ -25,8 +26,7 @@ class CloudSQLTool(BaseVoiceTool):
         logger.info(f"Executing Cloud SQL Query on [{instance_connection_name}/{database_name}]: {sql_query}")
         
         # Guardrail: Prevent mutations
-        query_upper = sql_query.upper().strip()
-        if any(kw in query_upper for kw in ["DROP ", "DELETE ", "UPDATE ", "INSERT ", "ALTER "]):
+        if is_mutating_query(sql_query):
             return {"error": "Mutating SQL queries are restricted on Cloud SQL for safety policy."}
 
         # Uses Cloud SQL Python Connector + SQLAlchemy / psycopg2
