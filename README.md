@@ -73,26 +73,34 @@ flowchart TD
 
 ## System Capabilities
 
-Gemini Live Integration
-Uses the google-genai SDK for bidirectional streaming over WebSockets. Supports authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key). Configurable models default to gemini-2.5-flash with native context window compression.
+### Gemini Live Integration
+* Uses the official `google-genai` SDK for bidirectional streaming over WebSockets.
+* Supports dual authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key).
+* Configured by default for `gemini-2.5-flash` with native context window compression.
 
-Agent and Tool Orchestration
-The Agent Orchestrator manages session lifecycles, user identity, working memory sliding buffers, and barge-in audio interruptions. The Async Tool Orchestrator converts Pydantic tool models into Gemini Function Declarations, intercepts function call events over WebSockets, executes concurrent tool calls across GCP services, and returns formatted responses back to the Live model stream.
+### Agent and Tool Orchestration
+* **Voice Session Orchestrator**: Manages multi-turn session lifecycles, user identities, barge-in audio interruptions, and context window compaction.
+* **Async Tool Dispatcher**: Dynamically converts Pydantic tool models into Gemini OpenAPI Function Declarations, intercepts live WebSocket function calls, executes concurrent GCP tool invocations, and returns formatted responses back to the Live stream.
 
-Resilience Engineering
-Includes token-bucket rate limiting for session turns, exponential backoff retries with full jitter for GCP operations, and circuit breakers (CLOSED, OPEN, HALF_OPEN) across all GCP service connectors to handle backend outages cleanly.
+### Resilience Engineering
+* **Token-Bucket Rate Limiter**: Enforces configurable rate limits per user session to protect downstream GCP services.
+* **Circuit Breakers**: Implements state-machine breakers (CLOSED, OPEN, HALF_OPEN) across all GCP connectors to isolate backend outages gracefully.
+* **Exponential Backoff Retries**: Decorates API operations with backoff and full jitter to recover from transient network drops automatically.
 
-GCP Service Integration and Multi-Service Extraction
-Connectors for Cloud Spanner, Spanner Graph DB (ISO GQL), Cloud SQL (pgvector), Firestore, BigQuery, Cloud Pub/Sub, and Vertex AI Search (RAG). Allows the voice agent to extract real-time data across multiple GCP services in a single voice conversation and report structured insights back to the user.
+### Multi-Service GCP Extraction
+* Real-time connectors for Cloud Spanner, Spanner Graph DB (ISO GQL), Cloud SQL (`pgvector`), Firestore, BigQuery, Cloud Pub/Sub, and Vertex AI Search (RAG).
+* Enables the voice agent to extract structured data across multiple GCP backend services in a single conversational turn and speak unified insights back to the user.
 
-State and Memory Management
-Short-term working memory ring buffer with automatic context compaction, paired with persistent episodic memory stored in Cloud Firestore.
+### State and Memory Management
+* **Working Memory**: In-memory ring buffer tracking recent conversation turns with automated background context compaction.
+* **Episodic Memory**: Persistent cross-session user profile and conversation state stored in Cloud Firestore.
 
-Tool-Level and Agent-Level Evaluations
-Evaluates performance at both granular tool execution levels (latency, schema validity, RAG Corpus ID and Document URI provenance metadata, row-level provenance) and end-to-end agent levels (task success, turn latency percentiles, groundedness, and Speech-to-Text audio transcript WER verification).
+### Tool-Level and Agent-Level Evaluations
+* **Tool Execution Evaluator**: Verifies schema compliance, execution latency (ms), RAG Corpus ID and Document URI provenance metadata, and database row provenance.
+* **Agent Performance Evaluator**: Measures end-to-end task success rates, turn latency percentiles (p50, p95, p99), response groundedness, and Word Error Rate (WER) using `google-cloud-speech` STT audio transcript verification.
 
-Security Guardrails
-Three-tier guardrail system covering input prompt injection checks, tool execution boundary filters (blocking DDL/DML mutations), and output safety evaluation.
+### Security Guardrails
+* Three-tier security engine enforcing input prompt injection detection, tool execution boundary protection (blocking unauthorized DDL/DML mutations), and output harm evaluation.
 
 ## Quick Start
 
@@ -115,7 +123,7 @@ Copy the sample configuration file and update parameters:
 cp .env.example .env
 ```
 
-Set environment variables in .env:
+Set environment variables in `.env`:
 
 ```bash
 GCP_PROJECT_ID=YOUR_GCP_PROJECT_ID
@@ -131,7 +139,7 @@ GEMINI_VOICE_NAME=Puck
 python -m uvicorn src.api.fastapi_app:app --host 0.0.0.0 --port 8000
 ```
 
-Access API documentation at http://localhost:8000/docs or establish WebSocket connections at ws://localhost:8000/ws/voice.
+Access API documentation at `http://localhost:8000/docs` or establish WebSocket connections at `ws://localhost:8000/ws/voice`.
 
 4. Testing
 
