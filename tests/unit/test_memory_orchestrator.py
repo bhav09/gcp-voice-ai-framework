@@ -35,7 +35,7 @@ async def test_unified_state_and_memory_orchestrator():
 
 @pytest.mark.asyncio
 async def test_voice_session_manager_memory_integration():
-    manager = VoiceSessionManager(session_id="session-mem-002", user_id="user_888", project_id="gen-demo-66-20250711")
+    manager = VoiceSessionManager(session_id="session-mem-002", user_id="user_888")
     await manager.initialize()
     
     client = manager.create_client(provider_type="vertex")

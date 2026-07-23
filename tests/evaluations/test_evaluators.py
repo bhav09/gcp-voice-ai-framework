@@ -10,7 +10,7 @@ from src.evaluations.acoustic_metrics import AcousticEvaluator
 
 @pytest.mark.asyncio
 async def test_llm_judge_groundedness():
-    judge = LLMJudgeEvaluator(project_id="gen-demo-66-20250711")
+    judge = LLMJudgeEvaluator()
     doc_context = ["GCP Vertex AI provides Gemini Live WebSockets support in us-central1."]
     res = await judge.evaluate_groundedness(
         agent_response="Gemini Live is available via Vertex AI WebSockets in us-central1.",

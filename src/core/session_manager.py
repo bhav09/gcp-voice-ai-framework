@@ -1,3 +1,4 @@
+import os
 import uuid
 import logging
 from typing import Optional, Dict, Any
@@ -11,10 +12,10 @@ logger = logging.getLogger("VoiceSessionManager")
 class VoiceSessionManager:
     """Manages Voice AI Agent session lifecycle, provider instantiation, interruption state, and common state/memory orchestration."""
 
-    def __init__(self, session_id: Optional[str] = None, user_id: Optional[str] = None, project_id: str = "gen-demo-66-20250711"):
+    def __init__(self, session_id: Optional[str] = None, user_id: Optional[str] = None, project_id: Optional[str] = None):
         self.session_id = session_id or str(uuid.uuid4())
         self.user_id = user_id
-        self.project_id = project_id
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self.client: Optional[BaseGeminiLiveClient] = None
         self.active_turn_id: int = 0
         self.is_interrupted: bool = False

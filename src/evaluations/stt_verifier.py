@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Any, Optional
 from google.cloud import speech
@@ -13,8 +14,8 @@ class STTVoiceVerifier:
     accuracy and Word Error Rate (WER) assertion checks.
     """
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711", language_code: str = "en-US"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None, language_code: str = "en-US"):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self.language_code = language_code
         self._speech_client = None
         self.acoustic_evaluator = AcousticEvaluator()

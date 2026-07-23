@@ -1,5 +1,6 @@
+import os
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from ..base_tool import BaseVoiceTool
 
@@ -15,8 +16,8 @@ class VertexRAGTool(BaseVoiceTool):
     description = "Searches enterprise knowledge corpora using Vertex AI Search & Vector Search."
     args_schema = RAGArgs
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711", datastore_id: str = "default-datastore"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None, datastore_id: str = "default-datastore"):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self.datastore_id = datastore_id
 
     async def execute(self, query: str) -> Dict[str, Any]:

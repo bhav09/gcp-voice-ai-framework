@@ -33,7 +33,7 @@ def test_base64_audio_payload_generation():
     assert live_config.response_modalities == ["AUDIO"]
 
 def test_vertex_setup_payload_generation():
-    client = VertexAILiveClient(project_id="gen-demo-66-20250711", region="us-central1")
+    client = VertexAILiveClient(region="us-central1")
     live_config = client.build_live_config()
     
     assert live_config is not None

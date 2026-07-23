@@ -8,7 +8,7 @@ from src.evaluations.stt_verifier import STTVoiceVerifier
 
 @pytest.mark.asyncio
 async def test_stt_voice_output_verification():
-    verifier = STTVoiceVerifier(project_id="gen-demo-66-20250711")
+    verifier = STTVoiceVerifier()
     
     # 24kHz PCM sample bytes
     sample_pcm = b"\x00\x00\x10\x00" * 240

@@ -1,6 +1,7 @@
+import os
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from google.cloud import pubsub_v1
 from ..base_tool import BaseVoiceTool
@@ -18,8 +19,8 @@ class PubSubTool(BaseVoiceTool):
     description = "Publishes asynchronous notification/action events to Google Cloud Pub/Sub topics."
     args_schema = PubSubArgs
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self._publisher = None
 
     def _get_publisher(self):

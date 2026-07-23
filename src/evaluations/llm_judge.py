@@ -1,13 +1,14 @@
+import os
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger("LLMJudgeEvaluator")
 
 class LLMJudgeEvaluator:
     """Automated LLM-as-a-Judge evaluation framework using Vertex AI AutoSxS / Gemini Flash."""
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
 
     async def evaluate_groundedness(self, agent_response: str, context_documents: List[str]) -> Dict[str, Any]:
         """Evaluate whether agent response is strictly grounded in retrieved knowledge context."""

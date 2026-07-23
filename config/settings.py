@@ -7,7 +7,7 @@ class VoiceAgentSettings(BaseModel):
     
     # GCP Project & Identity Configuration
     gcp_project_id: str = Field(
-        default_factory=lambda: os.getenv("GCP_PROJECT_ID", "gen-demo-66-20250711")
+        default_factory=lambda: os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
     )
     gcp_region: str = Field(
         default_factory=lambda: os.getenv("GCP_REGION", "us-central1")

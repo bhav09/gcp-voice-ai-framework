@@ -14,7 +14,7 @@ def test_fastapi_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "HEALTHY"
-    assert data["project_id"] == "gen-demo-66-20250711"
+    assert data["project_id"] is not None
 
 def test_fastapi_tool_declarations_endpoint():
     response = client.get("/api/v1/tools/declarations")

@@ -9,7 +9,7 @@ logger = logging.getLogger("VoiceFrameworkTestRunner")
 def run_all_tests():
     logger.info("======================================================================")
     logger.info(" STARTING MASTER TEST SUITE FOR UNIVERSAL GCP VOICE AI FRAMEWORK ")
-    logger.info(" Target GCP Project: gen-demo-66-20250711 ")
+    logger.info(" Target GCP Project: YOUR_GCP_PROJECT_ID ")
     logger.info("======================================================================")
 
     template_dir = os.path.dirname(os.path.abspath(__file__))

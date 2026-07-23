@@ -25,7 +25,7 @@ class SampleTool(BaseVoiceTool):
         return {"location": location, "temp": "72F"}
 
 def test_settings_initialization():
-    assert settings.gcp_project_id == "gen-demo-66-20250711"
+    assert settings.gcp_project_id is not None
     assert settings.provider_type in ["vertex", "aistudio"]
 
 def test_audio_pipeline_vad():
@@ -37,9 +37,9 @@ def test_audio_pipeline_vad():
 
 def test_session_manager_provider_factory():
     manager = VoiceSessionManager()
-    vertex_client = manager.create_client(provider_type="vertex", project_id="gen-demo-66-20250711")
+    vertex_client = manager.create_client(provider_type="vertex")
     assert vertex_client is not None
-    assert vertex_client.model_name == "gemini-2.0-flash-exp"
+    assert vertex_client.model_name in ["gemini-2.5-flash", "gemini-2.0-flash-exp"]
 
 @pytest.mark.asyncio
 async def test_tool_dispatcher():

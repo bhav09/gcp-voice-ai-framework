@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -6,7 +7,7 @@ from ..base_tool import BaseVoiceTool
 logger = logging.getLogger("CloudSQLTool")
 
 class CloudSQLArgs(BaseModel):
-    instance_connection_name: str = Field(default="gen-demo-66-20250711:us-central1:default-sql", description="GCP Cloud SQL instance connection name (project:region:instance)")
+    instance_connection_name: str = Field(default="YOUR_GCP_PROJECT_ID:us-central1:default-sql", description="GCP Cloud SQL instance connection name (project:region:instance)")
     database_name: str = Field(default="app_db", description="Database name")
     sql_query: str = Field(description="Parameterised read-only SQL query (supports pgvector vector similarity queries)")
 
@@ -17,8 +18,8 @@ class CloudSQLTool(BaseVoiceTool):
     description = "Executes read-only relational and pgvector similarity queries on Google Cloud SQL databases."
     args_schema = CloudSQLArgs
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
 
     async def execute(self, sql_query: str, instance_connection_name: str = "gen-demo-66-20250711:us-central1:default-sql", database_name: str = "app_db") -> Dict[str, Any]:
         logger.info(f"Executing Cloud SQL Query on [{instance_connection_name}/{database_name}]: {sql_query}")

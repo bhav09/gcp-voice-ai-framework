@@ -12,7 +12,7 @@ from src.observability.metrics import VoiceMetricsCollector
 @pytest.mark.asyncio
 async def test_synthetic_voice_session_flow():
     manager = VoiceSessionManager(session_id="synth-e2e-001")
-    client = manager.create_client(provider_type="vertex", project_id="gen-demo-66-20250711")
+    client = manager.create_client(provider_type="vertex")
     
     await client.connect()
     assert client.is_connected

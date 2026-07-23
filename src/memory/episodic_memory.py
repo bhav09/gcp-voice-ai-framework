@@ -7,8 +7,9 @@ logger = logging.getLogger("EpisodicMemory")
 class EpisodicMemoryManager:
     """Long-term episodic user profile & dialogue persistence manager backed by Firestore."""
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711", collection: str = "voice_user_profiles"):
-        self.firestore_tool = FirestoreTool(project_id=project_id)
+    def __init__(self, project_id: Optional[str] = None, collection: str = "voice_user_profiles"):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
+        self.firestore_tool = FirestoreTool(project_id=self.project_id)
         self.collection = collection
 
     async def get_user_profile(self, user_id: str) -> Dict[str, Any]:

@@ -14,7 +14,7 @@ from src.tools.gcp_connectors.spanner_graph_tool import SpannerGraphTool
 from src.tools.gcp_connectors.cloudsql_tool import CloudSQLTool
 from src.memory.episodic_memory import EpisodicMemoryManager
 
-PROJECT_ID = "gen-demo-66-20250711"
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
 
 @pytest.mark.asyncio
 async def test_bigquery_read_only_tool():

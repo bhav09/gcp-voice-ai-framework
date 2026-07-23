@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 from typing import Dict, Any, List, Optional
@@ -16,10 +17,10 @@ class UnifiedStateAndMemoryOrchestrator:
     4. Long-Term Episodic Memory (Firestore user profile & cross-session memory).
     """
 
-    def __init__(self, session_id: str, user_id: Optional[str] = None, project_id: str = "gen-demo-66-20250711"):
+    def __init__(self, session_id: str, user_id: Optional[str] = None, project_id: Optional[str] = None):
         self.session_id = session_id
         self.user_id = user_id or f"anon_user_{session_id[:8]}"
-        self.project_id = project_id
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         
         # State & Memory Components
         self.state_store: Dict[str, Any] = {

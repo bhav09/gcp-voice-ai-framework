@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 from typing import AsyncGenerator, Dict, Any, Optional
@@ -12,14 +13,14 @@ class VertexAILiveClient(BaseGeminiLiveClient):
 
     def __init__(
         self,
-        project_id: str = "gen-demo-66-20250711",
+        project_id: Optional[str] = None,
         region: str = "us-central1",
         model_name: str = "gemini-2.5-flash",
         voice_name: str = "Puck",
         system_instruction: Optional[str] = None
     ):
         super().__init__(model_name, system_instruction)
-        self.project_id = project_id
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self.region = region
         self.voice_name = voice_name
         self.client = genai.Client(

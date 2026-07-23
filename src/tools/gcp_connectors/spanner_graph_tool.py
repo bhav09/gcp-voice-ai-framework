@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -18,8 +19,8 @@ class SpannerGraphTool(BaseVoiceTool):
     description = "Executes GQL graph traversal queries on Spanner Graph database schemas to find nodes, edges, and complex entity relationships."
     args_schema = SpannerGraphArgs
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self._client = None
 
     def _get_client(self):

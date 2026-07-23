@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -19,8 +20,8 @@ class FirestoreTool(BaseVoiceTool):
     description = "Reads or updates document records in Google Cloud Firestore session database."
     args_schema = FirestoreArgs
 
-    def __init__(self, project_id: str = "gen-demo-66-20250711"):
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None):
+        self.project_id = project_id or os.getenv("GCP_PROJECT_ID", "YOUR_GCP_PROJECT_ID")
         self._db = None
 
     def _get_db(self):
