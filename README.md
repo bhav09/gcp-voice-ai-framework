@@ -17,7 +17,7 @@ flowchart TD
         SessionOrchestrator["Voice Session Orchestrator"]
         ToolDispatcher["Async Tool Dispatcher & Schema Converter"]
         MemoryState["Unified State & Memory Orchestrator"]
-        GuardrailsEngine["3-Tier Guardrails & Resilience Layer"]
+        GuardrailsEngine["3-Tier Guardrails & NSFW Filter Layer"]
     end
 
     subgraph GeminiLiveEngine["Gemini Live Engine (google-genai)"]
@@ -26,6 +26,8 @@ flowchart TD
     end
 
     subgraph GCPFabric["Universal GCP Tool & Data Fabric"]
+        DashboardTool["Automated Dashboard Generator"]
+        InsightsTool["Cross-Source Insights Synthesizer"]
         RAGCorpus["Vertex AI Search (RAG Corpus & Document Provenance)"]
         SpannerDB["Cloud Spanner & Graph DB (ISO GQL)"]
         RelationalSQL["Cloud SQL (pgvector)"]
@@ -57,6 +59,8 @@ flowchart TD
     LiveClient -->|Function Call Events| ToolDispatcher
     ToolDispatcher -->|Async Concurrent Tool Invocations| GCPFabric
     
+    GCPFabric --> DashboardTool
+    GCPFabric --> InsightsTool
     GCPFabric --> RAGCorpus
     GCPFabric --> SpannerDB
     GCPFabric --> RelationalSQL
@@ -82,14 +86,18 @@ flowchart TD
 * **Voice Session Orchestrator**: Manages multi-turn session lifecycles, user identities, barge-in audio interruptions, and context window compaction.
 * **Async Tool Dispatcher**: Dynamically converts Pydantic tool models into Gemini OpenAPI Function Declarations, intercepts live WebSocket function calls, executes concurrent GCP tool invocations, and returns formatted responses back to the Live stream.
 
+### Automated Dashboard Generation
+* **Cross-Source Data Discovery**: Identifies where target business metrics reside across BigQuery datasets, Cloud Spanner relational tables, Cloud SQL vector indexes, and Firestore document collections.
+* **Automated Visual Specs**: Generates dashboard specifications with line charts, bar graphs, KPI cards, and Looker Studio / GCP Monitoring links directly from voice instructions.
+
+### Cross-Source Executive Insights Engine
+* Discovers and correlates data across BigQuery analytical engines, Cloud Spanner graph schemas, Cloud SQL pgvector similarity indexes, and Vertex RAG document corpora in a single voice turn.
+* Synthesizes statistical takeaways, growth trends, anomalies, and executive summaries.
+
 ### Resilience Engineering
 * **Token-Bucket Rate Limiter**: Enforces configurable rate limits per user session to protect downstream GCP services.
 * **Circuit Breakers**: Implements state-machine breakers (CLOSED, OPEN, HALF_OPEN) across all GCP connectors to isolate backend outages gracefully.
 * **Exponential Backoff Retries**: Decorates API operations with backoff and full jitter to recover from transient network drops automatically.
-
-### Multi-Service GCP Extraction
-* Real-time connectors for Cloud Spanner, Spanner Graph DB (ISO GQL), Cloud SQL (`pgvector`), Firestore, BigQuery, Cloud Pub/Sub, and Vertex AI Search (RAG).
-* Enables the voice agent to extract structured data across multiple GCP backend services in a single conversational turn and speak unified insights back to the user.
 
 ### State and Memory Management
 * **Working Memory**: In-memory ring buffer tracking recent conversation turns with automated background context compaction.
@@ -99,8 +107,10 @@ flowchart TD
 * **Tool Execution Evaluator**: Verifies schema compliance, execution latency (ms), RAG Corpus ID and Document URI provenance metadata, and database row provenance.
 * **Agent Performance Evaluator**: Measures end-to-end task success rates, turn latency percentiles (p50, p95, p99), response groundedness, and Word Error Rate (WER) using `google-cloud-speech` STT audio transcript verification.
 
-### Security Guardrails
-* Three-tier security engine enforcing input prompt injection detection, tool execution boundary protection (blocking unauthorized DDL/DML mutations), and output harm evaluation.
+### Strict NSFW and Off-Topic Guardrails
+* **NSFW & Vulgar Language Blocking**: Detects explicit or profane language and politely redirects the conversation back to GCP enterprise operations.
+* **Off-Topic Redirection Policy**: Politely declines non-business or off-topic conversation requests, remaining strictly focused on GCP analytics, dashboard creation, and data management tools.
+* **Security & Mutation Boundaries**: Enforces read-only operational boundaries to block unauthorized database DDL/DML deletion commands.
 
 ## Quick Start
 

@@ -28,6 +28,15 @@ class VoiceAgentSettings(BaseModel):
         default_factory=lambda: os.getenv("GEMINI_VOICE_NAME", "Puck")
     )
     
+    # System Persona & Guardrail Policy Instruction
+    system_instruction: str = (
+        "You are an enterprise GCP Voice AI Assistant specializing in GCP data analytics, automated dashboard generation, "
+        "and cross-source data discovery across BigQuery, Cloud Spanner, Cloud SQL, Firestore, Cloud Pub/Sub, and Vertex RAG. "
+        "STRICT POLICY: You must NOT entertain any NSFW, vulgar, explicit, profane language or off-topic non-business conversations. "
+        "If a user uses NSFW language or engages in off-topic chatter, politely decline and steer the conversation back "
+        "to GCP enterprise analytics, dashboard creation, and data extraction tools."
+    )
+
     # API Keys & Credentials
     gemini_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("GEMINI_API_KEY")

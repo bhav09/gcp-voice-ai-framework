@@ -9,6 +9,8 @@ from src.tools.gcp_connectors.rag_vertex import VertexRAGTool
 from src.tools.gcp_connectors.spanner_tool import SpannerTool
 from src.tools.gcp_connectors.spanner_graph_tool import SpannerGraphTool
 from src.tools.gcp_connectors.cloudsql_tool import CloudSQLTool
+from src.tools.gcp_connectors.dashboard_tool import DashboardGeneratorTool
+from src.tools.gcp_connectors.insights_tool import CrossSourceInsightsTool
 
 router = APIRouter(prefix="/api/v1/tools", tags=["Tools Execution API"])
 
@@ -21,6 +23,8 @@ dispatcher.register_tool(VertexRAGTool())
 dispatcher.register_tool(SpannerTool())
 dispatcher.register_tool(SpannerGraphTool())
 dispatcher.register_tool(CloudSQLTool())
+dispatcher.register_tool(DashboardGeneratorTool())
+dispatcher.register_tool(CrossSourceInsightsTool())
 
 class ToolExecuteRequest(BaseModel):
     tool_name: str = Field(description="Registered tool name")
