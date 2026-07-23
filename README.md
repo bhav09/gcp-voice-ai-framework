@@ -2,77 +2,75 @@
 
 Production-grade Voice AI Framework for Google Cloud Platform. The architecture connects client applications to Google Gemini Live (Multimodal Live WebSockets API) via the google-genai SDK for low-latency, full-duplex voice interactions.
 
-## System Architecture
+## Architecture Flow
 
 ```mermaid
 flowchart TD
-    subgraph ClientLayer["Client Layer"]
-        Client["Web / Mobile Client"]
-    end
-
-    subgraph ServiceLayer["FastAPI Application Server"]
-        WS["WebSocket Stream Bridge (/ws/voice)"]
-        REST_Tools["REST Tools API (/api/v1/tools)"]
-        REST_Sessions["Session Lifecycle API (/api/v1/sessions)"]
-        
-        Guardrails["3-Tier Guardrails Engine"]
-        Memory["Unified State & Memory Orchestrator"]
-        Observability["Cloud Trace & Metrics Exporter"]
-    end
-
-    subgraph EngineLayer["Gemini Live Engine (google-genai)"]
-        BidiStream["Gemini Live Bidi WebSockets Stream"]
-        GeminiModel["Gemini 2.5 Flash / Gemini 2.0 Flash"]
-    end
-
-    subgraph GCPLayer["GCP Tool & Data Connectors"]
-        Spanner["Cloud Spanner & Graph DB (ISO GQL)"]
-        CloudSQL["Cloud SQL (pgvector)"]
-        BigQuery["BigQuery SQL Engine"]
-        Firestore["Firestore Document Database"]
-        PubSub["Cloud Pub/Sub Event Mesh"]
-        RAG["Vertex AI Search (RAG)"]
-        MCP["Model Context Protocol (MCP) Adapter"]
-    end
-
-    Client <-->|PCM Audio / Text / WS| WS
-    Client <-->|REST API| REST_Tools
-    Client <-->|REST API| REST_Sessions
-
-    WS <--> Guardrails
-    WS <--> Memory
-    WS <--> Observability
-
-    WS <-->|Bidi Audio / Tools| BidiStream
-    BidiStream <--> GeminiModel
-
-    REST_Tools --> Spanner
-    REST_Tools --> CloudSQL
-    REST_Tools --> BigQuery
-    REST_Tools --> Firestore
-    REST_Tools --> PubSub
-    REST_Tools --> RAG
-    REST_Tools --> MCP
+    User["User (Voice Input / Output)"]
     
-    Memory <--> Firestore
+    subgraph CoreEngine["Voice AI Core Engine"]
+        Orchestrator["Session Orchestrator"]
+        MemoryState["State & Memory Engine"]
+        GuardrailsEngine["Guardrail & Resilience Layer"]
+    end
+
+    subgraph GeminiLive["Gemini Live Multimodal Engine"]
+        GenAIClient["google-genai Live Client"]
+        GeminiModel["Gemini 2.5 Flash"]
+    end
+
+    subgraph GCPConnectors["GCP Service Connectors"]
+        RAGCorpus["Vertex AI Search (RAG Corpus & Document Provenance)"]
+        SpannerDB["Cloud Spanner & Graph DB"]
+        RelationalSQL["Cloud SQL (pgvector)"]
+        DataWarehouse["BigQuery Analytics"]
+        NoSQLDoc["Firestore Memory Store"]
+        EventPubSub["Cloud Pub/Sub Messaging"]
+    end
+
+    subgraph ObservabilityEvals["Observability & Evals"]
+        ToolEvals["Tool-Level & Provenance Evaluator"]
+        AgentEvals["Agent Task Completion & STT Verifier"]
+        CloudMetrics["Cloud Monitoring & Metrics Exporter"]
+    end
+
+    User <-->|Full-Duplex Audio PCM| Orchestrator
+    Orchestrator <--> MemoryState
+    Orchestrator <--> GuardrailsEngine
+
+    Orchestrator <-->|Bidirectional Audio Stream| GenAIClient
+    GenAIClient <--> GeminiModel
+
+    GenAIClient -->|Function Call Execution| GCPConnectors
+    GCPConnectors --> RAGCorpus
+    GCPConnectors --> SpannerDB
+    GCPConnectors --> RelationalSQL
+    GCPConnectors --> DataWarehouse
+    GCPConnectors --> NoSQLDoc
+    GCPConnectors --> EventPubSub
+
+    Orchestrator --> ObservabilityEvals
+    ObservabilityEvals --> ToolEvals
+    ObservabilityEvals --> AgentEvals
+    ObservabilityEvals --> CloudMetrics
 ```
 
-## Key Capabilities
+## System Capabilities
 
 Gemini Live Integration
 Uses the google-genai SDK for bidirectional streaming over WebSockets. Supports authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key). Configurable models default to gemini-2.5-flash with native context window compression.
 
-FastAPI Application Layer
-Exposes WebSocket voice streaming on /ws/voice, REST endpoints for tool execution on /api/v1/tools/execute, and session lifecycle management on /api/v1/sessions. Includes health check endpoints.
+Resilience Engineering
+Includes token-bucket rate limiting for session turns, exponential backoff retries with full jitter for GCP operations, and circuit breakers (CLOSED, OPEN, HALF_OPEN) across all GCP service connectors to handle backend outages cleanly.
 
-GCP Tool Integrations
-Connectors for Cloud Spanner, Spanner Graph DB (ISO GQL), Cloud SQL (pgvector), Firestore, BigQuery, Cloud Pub/Sub, and Vertex AI Search (RAG). Supports external tool servers via Model Context Protocol (MCP).
+GCP Service Integration and Multi-Service Extraction
+Connectors for Cloud Spanner, Spanner Graph DB (ISO GQL), Cloud SQL (pgvector), Firestore, BigQuery, Cloud Pub/Sub, and Vertex AI Search (RAG). Allows the voice agent to extract real-time data across multiple GCP services in a single voice conversation and report structured insights back to the user.
 
 State and Memory Management
 Short-term working memory ring buffer with automatic context compaction, paired with persistent episodic memory stored in Cloud Firestore.
 
-Voice Output STT Verification
-Automated speech-to-text verification harness using google-cloud-speech to transcribe generated audio output and measure Word Error Rate (WER) against expected ground truth phrases.
+Tool-Level and Agent-Level Evaluations
+Evaluates performance at both granular tool execution levels (latency, schema validity, RAG Corpus ID and Document URI provenance metadata, row-level provenance) and end-to-end agent levels (task success, turn latency percentiles, groundedness, and Speech-to-Text audio transcript WER verification).
 
 Security Guardrails
 Three-tier guardrail system covering input prompt injection checks, tool execution boundary filters (blocking DDL/DML mutations), and output safety evaluation.
