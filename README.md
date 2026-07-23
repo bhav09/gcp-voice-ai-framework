@@ -6,59 +6,78 @@ Production-grade Voice AI Framework for Google Cloud Platform. The architecture 
 
 ```mermaid
 flowchart TD
-    User["User (Voice Input / Output)"]
+    User["User (Full-Duplex PCM Audio Stream)"]
     
-    subgraph CoreEngine["Voice AI Core Engine"]
-        Orchestrator["Session Orchestrator"]
-        MemoryState["State & Memory Engine"]
-        GuardrailsEngine["Guardrail & Resilience Layer"]
+    subgraph ServiceLayer["FastAPI Application & Transport Layer"]
+        WSBridge["WebSockets Voice Stream Bridge"]
+        RESTService["REST Tools & Sessions API"]
     end
 
-    subgraph GeminiLive["Gemini Live Multimodal Engine"]
-        GenAIClient["google-genai Live Client"]
+    subgraph AgentOrchestration["Agent & Tool Orchestration Engine"]
+        SessionOrchestrator["Voice Session Orchestrator"]
+        ToolDispatcher["Async Tool Dispatcher & Schema Converter"]
+        MemoryState["Unified State & Memory Orchestrator"]
+        GuardrailsEngine["3-Tier Guardrails & Resilience Layer"]
+    end
+
+    subgraph GeminiLiveEngine["Gemini Live Engine (google-genai)"]
+        LiveClient["google-genai Live Connect Engine"]
         GeminiModel["Gemini 2.5 Flash"]
     end
 
-    subgraph GCPConnectors["GCP Service Connectors"]
+    subgraph GCPFabric["Universal GCP Tool & Data Fabric"]
         RAGCorpus["Vertex AI Search (RAG Corpus & Document Provenance)"]
-        SpannerDB["Cloud Spanner & Graph DB"]
+        SpannerDB["Cloud Spanner & Graph DB (ISO GQL)"]
         RelationalSQL["Cloud SQL (pgvector)"]
-        DataWarehouse["BigQuery Analytics"]
-        NoSQLDoc["Firestore Memory Store"]
-        EventPubSub["Cloud Pub/Sub Messaging"]
+        DataWarehouse["BigQuery Analytics Engine"]
+        NoSQLStore["Firestore Episodic Memory Store"]
+        EventPubSub["Cloud Pub/Sub Event Mesh"]
+        MCPAdapter["Model Context Protocol (MCP) Adapter"]
     end
 
-    subgraph ObservabilityEvals["Observability & Evals"]
-        ToolEvals["Tool-Level & Provenance Evaluator"]
-        AgentEvals["Agent Task Completion & STT Verifier"]
-        CloudMetrics["Cloud Monitoring & Metrics Exporter"]
+    subgraph ObservabilityFramework["Observability & Evaluation Framework"]
+        ToolEvaluator["Tool-Level Provenance & Schema Evaluator"]
+        AgentEvaluator["Agent Task Completion & STT Audio Verifier"]
+        TelemetryExporter["Cloud Monitoring & OpenTelemetry Exporter"]
     end
 
-    User <-->|Full-Duplex Audio PCM| Orchestrator
-    Orchestrator <--> MemoryState
-    Orchestrator <--> GuardrailsEngine
+    User <-->|Bidirectional Audio Stream| WSBridge
+    User <-->|HTTP REST Requests| RESTService
 
-    Orchestrator <-->|Bidirectional Audio Stream| GenAIClient
-    GenAIClient <--> GeminiModel
+    WSBridge <--> SessionOrchestrator
+    RESTService <--> ToolDispatcher
 
-    GenAIClient -->|Function Call Execution| GCPConnectors
-    GCPConnectors --> RAGCorpus
-    GCPConnectors --> SpannerDB
-    GCPConnectors --> RelationalSQL
-    GCPConnectors --> DataWarehouse
-    GCPConnectors --> NoSQLDoc
-    GCPConnectors --> EventPubSub
+    SessionOrchestrator <--> MemoryState
+    SessionOrchestrator <--> GuardrailsEngine
+    SessionOrchestrator <--> ToolDispatcher
 
-    Orchestrator --> ObservabilityEvals
-    ObservabilityEvals --> ToolEvals
-    ObservabilityEvals --> AgentEvals
-    ObservabilityEvals --> CloudMetrics
+    SessionOrchestrator <-->|Audio PCM Chunks & Tool Responses| LiveClient
+    LiveClient <--> GeminiModel
+
+    LiveClient -->|Function Call Events| ToolDispatcher
+    ToolDispatcher -->|Async Concurrent Tool Invocations| GCPFabric
+    
+    GCPFabric --> RAGCorpus
+    GCPFabric --> SpannerDB
+    GCPFabric --> RelationalSQL
+    GCPFabric --> DataWarehouse
+    GCPFabric --> NoSQLStore
+    GCPFabric --> EventPubSub
+    GCPFabric --> MCPAdapter
+
+    AgentOrchestration --> ObservabilityFramework
+    ObservabilityFramework --> ToolEvaluator
+    ObservabilityFramework --> AgentEvaluator
+    ObservabilityFramework --> TelemetryExporter
 ```
 
 ## System Capabilities
 
 Gemini Live Integration
 Uses the google-genai SDK for bidirectional streaming over WebSockets. Supports authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key). Configurable models default to gemini-2.5-flash with native context window compression.
+
+Agent and Tool Orchestration
+The Agent Orchestrator manages session lifecycles, user identity, working memory sliding buffers, and barge-in audio interruptions. The Async Tool Orchestrator converts Pydantic tool models into Gemini Function Declarations, intercepts function call events over WebSockets, executes concurrent tool calls across GCP services, and returns formatted responses back to the Live model stream.
 
 Resilience Engineering
 Includes token-bucket rate limiting for session turns, exponential backoff retries with full jitter for GCP operations, and circuit breakers (CLOSED, OPEN, HALF_OPEN) across all GCP service connectors to handle backend outages cleanly.
