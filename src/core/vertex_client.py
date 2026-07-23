@@ -66,9 +66,16 @@ class VertexAILiveClient(BaseGeminiLiveClient):
 
     async def send_text_message(self, text: str) -> None:
         if not self.is_connected:
-            raise RuntimeError("Client is not connected.")
+            raise RuntimeError("Client is not connected to Vertex AI Live session.")
         if self.session:
-            await self.session.send(input=text, end_of_turn=True)
+            await self.session.send(input={"text": text}, end_of_turn=True)
+
+    async def send_realtime_media_frame(self, image_bytes: bytes, mime_type: str = "image/jpeg") -> None:
+        if not self.is_connected:
+            raise RuntimeError("Client is not connected to Vertex AI Live session.")
+        logger.info(f"Sending real-time camera/image frame chunk ({len(image_bytes)} bytes, {mime_type})")
+        if self.session:
+            await self.session.send(realtime_input={"media_chunks": [types.Blob(mime_type=mime_type, data=image_bytes)]})
 
     async def send_tool_response(self, call_id: str, function_name: str, response: Dict[str, Any]) -> None:
         logger.info(f"Sent tool response for {function_name} ({call_id}) to Vertex AI via google-genai SDK.")

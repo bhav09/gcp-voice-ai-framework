@@ -31,6 +31,11 @@ class BaseGeminiLiveClient(ABC):
         pass
 
     @abstractmethod
+    async def send_realtime_media_frame(self, image_bytes: bytes, mime_type: str = "image/jpeg") -> None:
+        """Send camera image / video frame chunk (JPEG or PNG) to the multimodal live stream."""
+        pass
+
+    @abstractmethod
     async def send_tool_response(self, call_id: str, function_name: str, response: Dict[str, Any]) -> None:
         """Return function call execution result back to Gemini Live."""
         pass
