@@ -6,7 +6,6 @@
   Production-grade Voice AI Framework for Google Cloud Platform. The architecture connects client applications to Google Gemini Live (Multimodal Live WebSockets API) via the `google-genai` SDK for low-latency, full-duplex voice interactions.
 </div>
 
----
 
 ## System Capabilities
 
