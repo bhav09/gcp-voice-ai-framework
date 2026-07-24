@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo.png" alt="Universal GCP Multimodal Voice AI Framework Logo" width="450" />
+  <img src="assets/logo.png" alt="Universal GCP Multimodal Voice AI Framework Logo" width="250" />
 
   # Universal GCP Multimodal Voice AI Framework
 
