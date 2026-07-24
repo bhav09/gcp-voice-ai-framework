@@ -1,6 +1,49 @@
-# Universal GCP Multimodal Voice AI Framework
+<div align="center">
+  <img src="assets/logo.png" alt="Universal GCP Multimodal Voice AI Framework Logo" width="450" />
 
-Production-grade Voice AI Framework for Google Cloud Platform. The architecture connects client applications to Google Gemini Live (Multimodal Live WebSockets API) via the google-genai SDK for low-latency, full-duplex voice interactions.
+  # Universal GCP Multimodal Voice AI Framework
+
+  Production-grade Voice AI Framework for Google Cloud Platform. The architecture connects client applications to Google Gemini Live (Multimodal Live WebSockets API) via the `google-genai` SDK for low-latency, full-duplex voice interactions.
+</div>
+
+---
+
+## System Capabilities
+
+### Gemini Live Integration
+* Uses the official `google-genai` SDK for bidirectional streaming over WebSockets.
+* Supports dual authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key).
+* Configured by default for `gemini-2.5-flash` with native context window compression.
+
+### Agent and Tool Orchestration
+* **Voice Session Orchestrator**: Manages multi-turn session lifecycles, user identities, barge-in audio interruptions, and context window compaction.
+* **Async Tool Dispatcher**: Dynamically converts Pydantic tool models into Gemini OpenAPI Function Declarations, intercepts live WebSocket function calls, executes concurrent GCP tool invocations, and returns formatted responses back to the Live stream.
+
+### Automated Dashboard Generation
+* **Cross-Source Data Discovery**: Identifies where target business metrics reside across BigQuery datasets, Cloud Spanner relational tables, Cloud SQL vector indexes, and Firestore document collections.
+* **Automated Visual Specs**: Generates dashboard specifications with line charts, bar graphs, KPI cards, and Looker Studio / GCP Monitoring links directly from voice instructions.
+
+### Cross-Source Executive Insights Engine
+* Discovers and correlates data across BigQuery analytical engines, Cloud Spanner graph schemas, Cloud SQL pgvector similarity indexes, and Vertex RAG document corpora in a single voice turn.
+* Synthesizes statistical takeaways, growth trends, anomalies, and executive summaries.
+
+### Resilience Engineering
+* **Token-Bucket Rate Limiter**: Enforces configurable rate limits per user session to protect downstream GCP services.
+* **Circuit Breakers**: Implements state-machine breakers (CLOSED, OPEN, HALF_OPEN) across all GCP connectors to isolate backend outages gracefully.
+* **Exponential Backoff Retries**: Decorates API operations with backoff and full jitter to recover from transient network drops automatically.
+
+### State and Memory Management
+* **Working Memory**: In-memory ring buffer tracking recent conversation turns with automated background context compaction.
+* **Episodic Memory**: Persistent cross-session user profile and conversation state stored in Cloud Firestore.
+
+### Tool-Level and Agent-Level Evaluations
+* **Tool Execution Evaluator**: Verifies schema compliance, execution latency (ms), RAG Corpus ID and Document URI provenance metadata, and database row provenance.
+* **Agent Performance Evaluator**: Measures end-to-end task success rates, turn latency percentiles (p50, p95, p99), response groundedness, and Word Error Rate (WER) using `google-cloud-speech` STT audio transcript verification.
+
+### Strict NSFW and Off-Topic Guardrails
+* **NSFW & Vulgar Language Blocking**: Detects explicit or profane language and politely redirects the conversation back to GCP enterprise operations.
+* **Off-Topic Redirection Policy**: Politely declines non-business or off-topic conversation requests, remaining strictly focused on GCP analytics, dashboard creation, and data management tools.
+* **Security & Mutation Boundaries**: Enforces read-only operational boundaries to block unauthorized database DDL/DML deletion commands.
 
 ## Architecture Flow
 
@@ -74,43 +117,6 @@ flowchart TD
     ObservabilityFramework --> AgentEvaluator
     ObservabilityFramework --> TelemetryExporter
 ```
-
-## System Capabilities
-
-### Gemini Live Integration
-* Uses the official `google-genai` SDK for bidirectional streaming over WebSockets.
-* Supports dual authentication via Vertex AI (Application Default Credentials) and Google AI Studio (API Key).
-* Configured by default for `gemini-2.5-flash` with native context window compression.
-
-### Agent and Tool Orchestration
-* **Voice Session Orchestrator**: Manages multi-turn session lifecycles, user identities, barge-in audio interruptions, and context window compaction.
-* **Async Tool Dispatcher**: Dynamically converts Pydantic tool models into Gemini OpenAPI Function Declarations, intercepts live WebSocket function calls, executes concurrent GCP tool invocations, and returns formatted responses back to the Live stream.
-
-### Automated Dashboard Generation
-* **Cross-Source Data Discovery**: Identifies where target business metrics reside across BigQuery datasets, Cloud Spanner relational tables, Cloud SQL vector indexes, and Firestore document collections.
-* **Automated Visual Specs**: Generates dashboard specifications with line charts, bar graphs, KPI cards, and Looker Studio / GCP Monitoring links directly from voice instructions.
-
-### Cross-Source Executive Insights Engine
-* Discovers and correlates data across BigQuery analytical engines, Cloud Spanner graph schemas, Cloud SQL pgvector similarity indexes, and Vertex RAG document corpora in a single voice turn.
-* Synthesizes statistical takeaways, growth trends, anomalies, and executive summaries.
-
-### Resilience Engineering
-* **Token-Bucket Rate Limiter**: Enforces configurable rate limits per user session to protect downstream GCP services.
-* **Circuit Breakers**: Implements state-machine breakers (CLOSED, OPEN, HALF_OPEN) across all GCP connectors to isolate backend outages gracefully.
-* **Exponential Backoff Retries**: Decorates API operations with backoff and full jitter to recover from transient network drops automatically.
-
-### State and Memory Management
-* **Working Memory**: In-memory ring buffer tracking recent conversation turns with automated background context compaction.
-* **Episodic Memory**: Persistent cross-session user profile and conversation state stored in Cloud Firestore.
-
-### Tool-Level and Agent-Level Evaluations
-* **Tool Execution Evaluator**: Verifies schema compliance, execution latency (ms), RAG Corpus ID and Document URI provenance metadata, and database row provenance.
-* **Agent Performance Evaluator**: Measures end-to-end task success rates, turn latency percentiles (p50, p95, p99), response groundedness, and Word Error Rate (WER) using `google-cloud-speech` STT audio transcript verification.
-
-### Strict NSFW and Off-Topic Guardrails
-* **NSFW & Vulgar Language Blocking**: Detects explicit or profane language and politely redirects the conversation back to GCP enterprise operations.
-* **Off-Topic Redirection Policy**: Politely declines non-business or off-topic conversation requests, remaining strictly focused on GCP analytics, dashboard creation, and data management tools.
-* **Security & Mutation Boundaries**: Enforces read-only operational boundaries to block unauthorized database DDL/DML deletion commands.
 
 ## Quick Start
 
